@@ -1,0 +1,63 @@
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "centos/8"
+
+  config.vm.synced_folder ".", "/vagrant", type: "rsync"
+
+  # config.vm.network "forwarded_port", guest: 3306, host: 3307
+
+  config.vm.provider "virtualbox" do |vb|
+
+    vb.memory = "4096"
+
+    vb.cpus = "2"
+
+  end
+
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+
+    echo "INSTALLING MongoDB"
+
+    sudo cat << EOF >> /etc/yum.repos.d/mongodb-org.repo
+    [mongodb-org]
+    name=MongoDB Repository
+    baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/4.4/x86_64/
+    gpgcheck=1
+    enabled=1
+    gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+    EOF
+
+    sudo dnf install mongodb-org -y 
+
+    sudo systemctl start mongod 
+
+
+    echo "INSTALLING NODE JS"
+
+    sudo yum install curl -y
+
+    curl -sL https://rpm.nodesource.com/setup_10.x | sudo bash 
+
+    sudo yum install nodejs -y
+
+    node --version
+    npm --version
+
+
+    echo "INSTALLING EXPRESS"
+
+    sudo npm install -g express-generator -y
+
+    mkdir projectName
+    cd projectName
+    express
+    npm install 
+
+
+    echo "INSTALLING REACT"
+
+    sudo npm install -g create-react-app -y
+
+  SHELL
+
+end

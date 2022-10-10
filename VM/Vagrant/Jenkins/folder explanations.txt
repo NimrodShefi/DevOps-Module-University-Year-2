@@ -1,0 +1,1 @@
+This vagrant is because OpenStack is not working, so we need a way to be able to install Jenkins

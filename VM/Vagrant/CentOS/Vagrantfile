@@ -1,0 +1,55 @@
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "centos/8"
+
+  config.vm.synced_folder ".", "/vagrant", type: "rsync"
+
+  # config.vm.network "forwarded_port", guest: 3306, host: 3307
+
+  config.vm.provider "virtualbox" do |vb|
+
+    vb.memory = "4096"
+
+    vb.cpus = "2"
+
+  end
+
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+
+    echo "whoami..."
+
+    whoami
+
+    echo "pwd..."
+
+    echo “Team 2 best team”
+
+    pwd
+
+    echo "INSTALLING PYTHON"
+
+    sudo dnf install python3 –y
+
+    echo "INSTALLING JAVA"
+
+    # sudo yum install java-1.8.0-openjdk -y
+
+    sudo yum install java-1.8.0-openjdk-devel -y
+
+    JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk"
+
+    echo "INSTALLING MYSQL..."
+
+    sudo dnf install mysql-server -y
+
+    sudo systemctl start mysqld.service
+
+    sudo systemctl enable mysqld
+
+    sudo systemctl status mysqld
+
+    sudo mysql -u root < /vagrant/file.sql
+
+  SHELL
+
+end

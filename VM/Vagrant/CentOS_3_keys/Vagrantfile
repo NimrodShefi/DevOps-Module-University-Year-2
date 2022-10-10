@@ -1,0 +1,86 @@
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "centos/8"
+
+  config.vm.synced_folder ".", "/vagrant", type: "rsync", disabled: true
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "4096"
+    vb.cpus = "4"
+  end
+
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+
+echo "whoami..."
+whoami
+
+echo "pwd..."
+pwd
+
+# commented out to speed things up, do not do this in production
+# echo "upgrading..."
+# sudo yum upgrade -y
+
+echo "installing gfortran..."
+sudo yum install gcc-gfortran -y
+
+echo "installing git..."
+sudo yum install git -y
+
+echo "installing gitlab server key..."
+touch .ssh/known_hosts
+ssh-keyscan gitlab.cs.cf.ac.uk >> .ssh/known_hosts
+chmod 644 .ssh/known_hosts
+
+echo "installing gitlab deployment key..."
+touch gitlab_matrix_keypair.key
+cat << `EOF` >> gitlab_matrix_keypair.key
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEAqsGnh/VfQLhZzIAGuaoJppNbnjVCmj8L6sB/ZgMzxQ/0lSn+
+sOCkNFp9bV67DtWeBTnky9hDtebWwlAs/pYD3Anzen8KKwnQrUE0M5fRrPrRzxGL
+EK4QcohwRgMwr2A9yup1Ziwyxwf68Q9kgPQ6/LIEjT0+EJewwXIBnkwjBwz8J/lG
+QFal1tBS5ts2UAPzLQtx2uHri/qZxqYKk+ZHCqna4dfgGO55ZxDWRhTvxiruNqjt
+1G8BbXfoWhvYLPUUoGSYJfm/GubcryXIFczxOtbl18dse/lNIt5iLhf73seJKMCk
+QDele1jwtWa55ecYIJtQk1Of4DB++SA/hGSNvwIDAQABAoIBAHbti85gsqfz/e81
+l/mGGVSgO2ZUOAAQOy+UROb7AfqVY0bkydPNkfA4ujULjoMFexquuNDU3kv568fI
+aZ4jQ6rkb2T4yE8zddjFmiL48Xtl8e0jjdTfNuteZbwNisIK6N7EL2IrFG6U+00b
+6Gb8M30+S3dHmUubKuuAiOoEozzLxXkVhRUoWLh03hTaeRgvKKZT4LLIAaulZSGS
+78DFvScA3E9NeluNClWSn42qq58Z1Vaa23bhZ/lwx84dD0RGXPnln9vYS2w4uOpi
+LMQk13FpkOsY7ywmV53lJabUWUWl+CpOzlO8OqcNsUgOx9tHcpgTntPVKoyPN2RI
+pUSmP3kCgYEA4FfnTT3xNoBvy81nrjLnLVugeTQr+DrQLFYvaErZBfmy2tZrve/s
+HRAVyOul0qsVOlUWUkkb5efpBrrGDAas1s5jIPY4QbfM0w++8zOgnGVGONBrp6/u
+o31geiazsRRm00eIfzU1WsAgqv2KsLY+IEli3FKcTBdF3OR2H3qTZesCgYEAwtn/
+ToHUhe33Ro2BQBjNu6n29wVjteIsUw0ubaJnVSyXnVnWBhnHqDx1U/ZwVyCEURAB
+HfocLb0t0yoOekZXq0esnx3OyTpcWgrX3UzQvcSSQuDoTKa5tI28TEC+ibfKM6j4
+yZrGLYa6WTE7k8FLVE4bulhlLtwpHiHgwpOe3n0CgYEAqoHk6I4VkMjZL1q0XG+P
+yKeFNdlzObzpj2kJqwiIHcSELVMenEOHfydEh2qio5UoEyesSWoLbBdwwo6eC3Hf
+V3uRV/ILG9eoMxoalRk+Dt/iGTg/Ojm69ENMWkqj9Ah/hkEt+xDjtk+kBJGjIV/B
+pCRioPWgmSxvCs4RASfWc3UCgYEAsI+K2Z+pbOaRr5ufp+4R1mAPygxXKsPUODl0
+faGwkqyCgfGajxKjKV4HTtq7Nyfe3flrmbc9+3A16udsEP5WiHy8/b2r2AmLD4hN
+zFjDuYE6q2FS/coB8oqQOmRcgzxH/AG71irqMuynRRTokF2RncXdOEDLBug2VfiK
+yqWrSp0CgYAE17/jr7ZeEaW8trDdn2kJnp6EASoYLYEqmARa1nbOoU0/zQPgeyK3
+naVakj0P6vj1ohpkRlx88Dgxt2IcUt6jhEoCSg0oUwXqby8YbMBtRJSXhNJfdUNE
+UcqGpg7mor1BcOvUIhLRjLYhLcIIJd9qyxsGHvbspaoiaDw44DznjQ==
+-----END RSA PRIVATE KEY-----
+`EOF`
+chmod 400 gitlab_matrix_keypair.key
+
+echo "cloning repository..."
+ssh-agent bash -c 'ssh-add gitlab_matrix_keypair.key; git clone git@gitlab.cs.cf.ac.uk:CM6212/matrix.git'
+
+echo "changing to repository directory..."
+cd matrix
+
+echo "enabling execution..."
+chmod u+x *.sh
+
+echo "compiling matrix..."
+./make.sh
+
+echo "running matrix..."
+nohup ./run.sh &
+
+  SHELL
+
+end

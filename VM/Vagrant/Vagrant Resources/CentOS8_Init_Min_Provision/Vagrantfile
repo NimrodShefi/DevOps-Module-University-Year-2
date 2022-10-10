@@ -1,0 +1,22 @@
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "centos/8"
+
+  config.vm.synced_folder ".", "/vagrant", type: "rsync"
+
+# The SHELL is a file within this file, whihc will run the commands in it when the vagrant file is loaded
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+
+    echo "whoami..."
+    whoami
+
+    echo "pwd..."
+    pwd
+
+    echo "upgrading..."
+    sudo yum upgrade -y
+
+  SHELL
+
+end

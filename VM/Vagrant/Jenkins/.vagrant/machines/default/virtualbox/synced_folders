@@ -1,0 +1,1 @@
+{"rsync":{"/vagrant":{"type":"rsync","guestpath":"/vagrant","hostpath":"C:/Users/c1989618/Documents/Uni_Work/Year_2/Term_2/DevOps/VM/Vagrant/Jenkins","disabled":false,"__vagrantfile":true,"owner":"vagrant","group":"vagrant"}}}
